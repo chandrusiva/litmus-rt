@@ -64,11 +64,11 @@ static enum hrtimer_restart on_release_timer(struct hrtimer *timer)
 	TS_RELEASE_START;
 
 
-	raw_spin_lock_irqsave(&rh->dom->release_lock, flags);
+	litmus_spin_lock_irqsave(&rh->dom->release_lock, flags);
 	VTRACE("CB has the release_lock 0x%p\n", &rh->dom->release_lock);
 	/* remove from release queue */
 	list_del(&rh->list);
-	raw_spin_unlock_irqrestore(&rh->dom->release_lock, flags);
+	litmus_spin_unlock_irqrestore(&rh->dom->release_lock, flags);
 	VTRACE("CB returned release_lock 0x%p\n", &rh->dom->release_lock);
 
 	/* call release callback */
@@ -203,20 +203,20 @@ static void arm_release_timer(rt_domain_t *_rt)
 		list_del(pos);
 
 		/* put into release heap while holding release_lock */
-		raw_spin_lock(&rt->release_lock);
+		litmus_spin_lock(&rt->release_lock);
 		VTRACE_TASK(t, "I have the release_lock 0x%p\n", &rt->release_lock);
 
 		rh = get_release_heap(rt, t, 0);
 		if (!rh) {
 			/* need to use our own, but drop lock first */
-			raw_spin_unlock(&rt->release_lock);
+			litmus_spin_unlock(&rt->release_lock);
 			VTRACE_TASK(t, "Dropped release_lock 0x%p\n",
 				    &rt->release_lock);
 
 			reinit_release_heap(t);
 			VTRACE_TASK(t, "release_heap ready\n");
 
-			raw_spin_lock(&rt->release_lock);
+			litmus_spin_lock(&rt->release_lock);
 			VTRACE_TASK(t, "Re-acquired release_lock 0x%p\n",
 				    &rt->release_lock);
 
@@ -225,7 +225,7 @@ static void arm_release_timer(rt_domain_t *_rt)
 		bheap_insert(rt->order, &rh->heap, tsk_rt(t)->heap_node);
 		VTRACE_TASK(t, "arm_release_timer(): added to release heap\n");
 
-		raw_spin_unlock(&rt->release_lock);
+		litmus_spin_unlock(&rt->release_lock);
 		VTRACE_TASK(t, "Returned the release_lock 0x%p\n", &rt->release_lock);
 
 		/* To avoid arming the timer multiple times, we only let the
@@ -286,9 +286,9 @@ void rt_domain_init(rt_domain_t *rt,
 	for (i = 0; i < RELEASE_QUEUE_SLOTS; i++)
 		INIT_LIST_HEAD(&rt->release_queue.slot[i]);
 
-	raw_spin_lock_init(&rt->ready_lock);
-	raw_spin_lock_init(&rt->release_lock);
-	raw_spin_lock_init(&rt->tobe_lock);
+	litmus_spin_lock_init(&rt->ready_lock);
+	litmus_spin_lock_init(&rt->release_lock);
+	litmus_spin_lock_init(&rt->tobe_lock);
 
 	rt->check_resched 	= check;
 	rt->release_jobs	= release;

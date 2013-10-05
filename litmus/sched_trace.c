@@ -13,6 +13,8 @@
 #include <linux/sched.h>
 #include <linux/kfifo.h>
 
+#include <litmus/spinlock.h>
+
 atomic_t __log_seq_no = ATOMIC_INIT(0);
 
 #define SCHED_TRACE_NAME "litmus/log"
@@ -33,7 +35,7 @@ static atomic_t reader_cnt = ATOMIC_INIT(0);
 static DEFINE_KFIFO(debug_buffer, char, LITMUS_TRACE_BUF_SIZE);
 
 
-static DEFINE_RAW_SPINLOCK(log_buffer_lock);
+static DEFINE_LITMUS_SPINLOCK(log_buffer_lock);
 static DEFINE_PER_CPU(char[MSG_SIZE], fmt_buffer);
 
 /*
@@ -63,12 +65,12 @@ void sched_trace_log_message(const char* fmt, ...)
 	buf = __get_cpu_var(fmt_buffer);
 	len = vscnprintf(buf, MSG_SIZE, fmt, args);
 
-	raw_spin_lock(&log_buffer_lock);
+	litmus_spin_lock(&log_buffer_lock);
 	/* Don't copy the trailing null byte, we don't want null bytes in a
 	 * text file.
 	 */
 	kfifo_in(&debug_buffer, buf, len);
-	raw_spin_unlock(&log_buffer_lock);
+	litmus_spin_unlock(&log_buffer_lock);
 
 	local_irq_restore(flags);
 	va_end(args);

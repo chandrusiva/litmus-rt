@@ -334,12 +334,12 @@ static void gsnedf_release_jobs(rt_domain_t* rt, struct bheap* tasks)
 {
 	unsigned long flags;
 
-	raw_spin_lock_irqsave(&gsnedf_lock, flags);
+	litmus_spin_lock_irqsave(&gsnedf_lock, flags);
 
 	__merge_ready(rt, tasks);
 	check_for_preemptions();
 
-	raw_spin_unlock_irqrestore(&gsnedf_lock, flags);
+	litmus_spin_unlock_irqrestore(&gsnedf_lock, flags);
 }
 
 /* caller holds gsnedf_lock */
@@ -428,7 +428,7 @@ static struct task_struct* gsnedf_schedule(struct task_struct * prev)
 	}
 #endif
 
-	raw_spin_lock(&gsnedf_lock);
+	litmus_spin_lock(&gsnedf_lock);
 
 	/* sanity checking */
 	BUG_ON(entry->scheduled && entry->scheduled != prev);
@@ -512,7 +512,7 @@ static struct task_struct* gsnedf_schedule(struct task_struct * prev)
 
 	sched_state_task_picked();
 
-	raw_spin_unlock(&gsnedf_lock);
+	litmus_spin_unlock(&gsnedf_lock);
 
 #ifdef WANT_ALL_SCHED_EVENTS
 	TRACE("gsnedf_lock released, next=0x%p\n", next);
@@ -550,7 +550,7 @@ static void gsnedf_task_new(struct task_struct * t, int on_rq, int is_scheduled)
 
 	TRACE("gsn edf: task new %d\n", t->pid);
 
-	raw_spin_lock_irqsave(&gsnedf_lock, flags);
+	litmus_spin_lock_irqsave(&gsnedf_lock, flags);
 
 	/* setup job params */
 	release_at(t, litmus_clock());
@@ -578,7 +578,7 @@ static void gsnedf_task_new(struct task_struct * t, int on_rq, int is_scheduled)
 
 	if (is_running(t))
 		gsnedf_job_arrival(t);
-	raw_spin_unlock_irqrestore(&gsnedf_lock, flags);
+	litmus_spin_unlock_irqrestore(&gsnedf_lock, flags);
 }
 
 static void gsnedf_task_wake_up(struct task_struct *task)
@@ -588,7 +588,7 @@ static void gsnedf_task_wake_up(struct task_struct *task)
 
 	TRACE_TASK(task, "wake_up at %llu\n", litmus_clock());
 
-	raw_spin_lock_irqsave(&gsnedf_lock, flags);
+	litmus_spin_lock_irqsave(&gsnedf_lock, flags);
 	now = litmus_clock();
 	if (is_sporadic(task) && is_tardy(task, now)) {
 		/* new sporadic release */
@@ -596,7 +596,7 @@ static void gsnedf_task_wake_up(struct task_struct *task)
 		sched_trace_task_release(task);
 	}
 	gsnedf_job_arrival(task);
-	raw_spin_unlock_irqrestore(&gsnedf_lock, flags);
+	litmus_spin_unlock_irqrestore(&gsnedf_lock, flags);
 }
 
 static void gsnedf_task_block(struct task_struct *t)
@@ -606,9 +606,9 @@ static void gsnedf_task_block(struct task_struct *t)
 	TRACE_TASK(t, "block at %llu\n", litmus_clock());
 
 	/* unlink if necessary */
-	raw_spin_lock_irqsave(&gsnedf_lock, flags);
+	litmus_spin_lock_irqsave(&gsnedf_lock, flags);
 	unlink(t);
-	raw_spin_unlock_irqrestore(&gsnedf_lock, flags);
+	litmus_spin_unlock_irqrestore(&gsnedf_lock, flags);
 
 	BUG_ON(!is_realtime(t));
 }
@@ -619,13 +619,13 @@ static void gsnedf_task_exit(struct task_struct * t)
 	unsigned long flags;
 
 	/* unlink if necessary */
-	raw_spin_lock_irqsave(&gsnedf_lock, flags);
+	litmus_spin_lock_irqsave(&gsnedf_lock, flags);
 	unlink(t);
 	if (tsk_rt(t)->scheduled_on != NO_CPU) {
 		gsnedf_cpus[tsk_rt(t)->scheduled_on]->scheduled = NULL;
 		tsk_rt(t)->scheduled_on = NO_CPU;
 	}
-	raw_spin_unlock_irqrestore(&gsnedf_lock, flags);
+	litmus_spin_unlock_irqrestore(&gsnedf_lock, flags);
 
 	BUG_ON(!is_realtime(t));
         TRACE_TASK(t, "RIP\n");
@@ -647,7 +647,7 @@ static void set_priority_inheritance(struct task_struct* t, struct task_struct* 
 	int linked_on;
 	int check_preempt = 0;
 
-	raw_spin_lock(&gsnedf_lock);
+	litmus_spin_lock(&gsnedf_lock);
 
 	TRACE_TASK(t, "inherits priority from %s/%d\n", prio_inh->comm, prio_inh->pid);
 	tsk_rt(t)->inh_task = prio_inh;
@@ -668,7 +668,7 @@ static void set_priority_inheritance(struct task_struct* t, struct task_struct* 
 			    gsnedf_cpus[linked_on]->hn);
 	} else {
 		/* holder may be queued: first stop queue changes */
-		raw_spin_lock(&gsnedf.release_lock);
+		litmus_spin_lock(&gsnedf.release_lock);
 		if (is_queued(t)) {
 			TRACE_TASK(t, "%s: is queued\n",
 				   __FUNCTION__);
@@ -687,7 +687,7 @@ static void set_priority_inheritance(struct task_struct* t, struct task_struct* 
 			TRACE_TASK(t, "%s: is NOT queued => Done.\n",
 				   __FUNCTION__);
 		}
-		raw_spin_unlock(&gsnedf.release_lock);
+		litmus_spin_unlock(&gsnedf.release_lock);
 
 		/* If holder was enqueued in a release heap, then the following
 		 * preemption check is pointless, but we can't easily detect
@@ -705,13 +705,13 @@ static void set_priority_inheritance(struct task_struct* t, struct task_struct* 
 		}
 	}
 
-	raw_spin_unlock(&gsnedf_lock);
+	litmus_spin_unlock(&gsnedf_lock);
 }
 
 /* called with IRQs off */
 static void clear_priority_inheritance(struct task_struct* t)
 {
-	raw_spin_lock(&gsnedf_lock);
+	litmus_spin_lock(&gsnedf_lock);
 
 	/* A job only stops inheriting a priority when it releases a
 	 * resource. Thus we can make the following assumption.*/
@@ -725,7 +725,7 @@ static void clear_priority_inheritance(struct task_struct* t)
 	unlink(t);
 	gsnedf_job_arrival(t);
 
-	raw_spin_unlock(&gsnedf_lock);
+	litmus_spin_unlock(&gsnedf_lock);
 }
 
 

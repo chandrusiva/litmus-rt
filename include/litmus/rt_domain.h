@@ -5,6 +5,7 @@
 #ifndef __UNC_RT_DOMAIN_H__
 #define __UNC_RT_DOMAIN_H__
 
+#include <litmus/spinlock.h>
 #include <litmus/bheap.h>
 
 #define RELEASE_QUEUE_SLOTS 127 /* prime */
@@ -22,11 +23,11 @@ struct release_queue {
 
 typedef struct _rt_domain {
 	/* runnable rt tasks are in here */
-	raw_spinlock_t 			ready_lock;
+	litmus_spinlock_t 		ready_lock;
 	struct bheap	 		ready_queue;
 
 	/* real-time tasks waiting for release are in here */
-	raw_spinlock_t 			release_lock;
+	litmus_spinlock_t 			release_lock;
 	struct release_queue 		release_queue;
 
 #ifdef CONFIG_RELEASE_MASTER
@@ -34,7 +35,7 @@ typedef struct _rt_domain {
 #endif
 
 	/* for moving tasks to the release queue */
-	raw_spinlock_t			tobe_lock;
+	litmus_spinlock_t		tobe_lock;
 	struct list_head		tobe_released;
 
 	/* how do we check if we need to kick another CPU? */
@@ -115,17 +116,17 @@ static inline void add_ready(rt_domain_t* rt, struct task_struct *new)
 {
 	unsigned long flags;
 	/* first we need the write lock for rt_ready_queue */
-	raw_spin_lock_irqsave(&rt->ready_lock, flags);
+	litmus_spin_lock_irqsave(&rt->ready_lock, flags);
 	__add_ready(rt, new);
-	raw_spin_unlock_irqrestore(&rt->ready_lock, flags);
+	litmus_spin_unlock_irqrestore(&rt->ready_lock, flags);
 }
 
 static inline void merge_ready(rt_domain_t* rt, struct bheap* tasks)
 {
 	unsigned long flags;
-	raw_spin_lock_irqsave(&rt->ready_lock, flags);
+	litmus_spin_lock_irqsave(&rt->ready_lock, flags);
 	__merge_ready(rt, tasks);
-	raw_spin_unlock_irqrestore(&rt->ready_lock, flags);
+	litmus_spin_unlock_irqrestore(&rt->ready_lock, flags);
 }
 
 static inline struct task_struct* take_ready(rt_domain_t* rt)
@@ -133,9 +134,9 @@ static inline struct task_struct* take_ready(rt_domain_t* rt)
 	unsigned long flags;
 	struct task_struct* ret;
 	/* first we need the write lock for rt_ready_queue */
-	raw_spin_lock_irqsave(&rt->ready_lock, flags);
+	litmus_spin_lock_irqsave(&rt->ready_lock, flags);
 	ret = __take_ready(rt);
-	raw_spin_unlock_irqrestore(&rt->ready_lock, flags);
+	litmus_spin_unlock_irqrestore(&rt->ready_lock, flags);
 	return ret;
 }
 
@@ -143,9 +144,9 @@ static inline struct task_struct* take_ready(rt_domain_t* rt)
 static inline void add_release(rt_domain_t* rt, struct task_struct *task)
 {
 	unsigned long flags;
-	raw_spin_lock_irqsave(&rt->tobe_lock, flags);
+	litmus_spin_lock_irqsave(&rt->tobe_lock, flags);
 	__add_release(rt, task);
-	raw_spin_unlock_irqrestore(&rt->tobe_lock, flags);
+	litmus_spin_unlock_irqrestore(&rt->tobe_lock, flags);
 }
 
 #ifdef CONFIG_RELEASE_MASTER
@@ -157,9 +158,9 @@ static inline void add_release_on(rt_domain_t* rt,
 				  int target_cpu)
 {
 	unsigned long flags;
-	raw_spin_lock_irqsave(&rt->tobe_lock, flags);
+	litmus_spin_lock_irqsave(&rt->tobe_lock, flags);
 	__add_release_on(rt, task, target_cpu);
-	raw_spin_unlock_irqrestore(&rt->tobe_lock, flags);
+	litmus_spin_unlock_irqrestore(&rt->tobe_lock, flags);
 }
 #endif
 
@@ -173,9 +174,9 @@ static inline int jobs_pending(rt_domain_t* rt)
 	unsigned long flags;
 	int ret;
 	/* first we need the write lock for rt_ready_queue */
-	raw_spin_lock_irqsave(&rt->ready_lock, flags);
+	litmus_spin_lock_irqsave(&rt->ready_lock, flags);
 	ret = !bheap_empty(&rt->ready_queue);
-	raw_spin_unlock_irqrestore(&rt->ready_lock, flags);
+	litmus_spin_unlock_irqrestore(&rt->ready_lock, flags);
 	return ret;
 }
 

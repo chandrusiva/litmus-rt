@@ -10,6 +10,7 @@
 #include <linux/seq_file.h>
 
 #include <litmus/litmus.h>
+#include <litmus/spinlock.h>
 #include <litmus/sched_plugin.h>
 #include <litmus/preempt.h>
 #include <litmus/jobs.h>
@@ -152,7 +153,7 @@ struct sched_plugin *litmus = &linux_sched_plugin;
 
 /* the list of registered scheduling plugins */
 static LIST_HEAD(sched_plugins);
-static DEFINE_RAW_SPINLOCK(sched_plugins_lock);
+static DEFINE_LITMUS_SPINLOCK(sched_plugins_lock);
 
 #define CHECK(func) {\
 	if (!plugin->func) \
@@ -161,6 +162,8 @@ static DEFINE_RAW_SPINLOCK(sched_plugins_lock);
 /* FIXME: get reference to module  */
 int register_sched_plugin(struct sched_plugin* plugin)
 {
+	unsigned long flags;
+
 	printk(KERN_INFO "Registering LITMUS^RT plugin %s.\n",
 	       plugin->plugin_name);
 
@@ -183,9 +186,9 @@ int register_sched_plugin(struct sched_plugin* plugin)
 	if (!plugin->release_at)
 		plugin->release_at = release_at;
 
-	raw_spin_lock(&sched_plugins_lock);
+	litmus_spin_lock_irqsave(&sched_plugins_lock, flags);
 	list_add(&plugin->list, &sched_plugins);
-	raw_spin_unlock(&sched_plugins_lock);
+	litmus_spin_unlock_irqrestore(&sched_plugins_lock, flags);
 
 	return 0;
 }
@@ -196,8 +199,9 @@ struct sched_plugin* find_sched_plugin(const char* name)
 {
 	struct list_head *pos;
 	struct sched_plugin *plugin;
+	unsigned long flags;
 
-	raw_spin_lock(&sched_plugins_lock);
+	litmus_spin_lock_irqsave(&sched_plugins_lock, flags);
 	list_for_each(pos, &sched_plugins) {
 		plugin = list_entry(pos, struct sched_plugin, list);
 		if (!strcmp(plugin->plugin_name, name))
@@ -206,7 +210,7 @@ struct sched_plugin* find_sched_plugin(const char* name)
 	plugin = NULL;
 
 out_unlock:
-	raw_spin_unlock(&sched_plugins_lock);
+	litmus_spin_unlock_irqrestore(&sched_plugins_lock, flags);
 	return plugin;
 }
 
@@ -214,11 +218,12 @@ void print_sched_plugins(struct seq_file *m)
 {
 	struct list_head *pos;
 	struct sched_plugin *plugin;
+	unsigned long flags;
 
-	raw_spin_lock(&sched_plugins_lock);
+	litmus_spin_lock_irqsave(&sched_plugins_lock, flags);
 	list_for_each(pos, &sched_plugins) {
 		plugin = list_entry(pos, struct sched_plugin, list);
 		seq_printf(m, "%s\n", plugin->plugin_name);
 	}
-	raw_spin_unlock(&sched_plugins_lock);
+	litmus_spin_unlock_irqrestore(&sched_plugins_lock, flags);
 }
