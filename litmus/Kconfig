@@ -89,6 +89,37 @@ endmenu
 
 menu "Performance Enhancements"
 
+config LITMUS_SPINLOCKS
+	bool "Cache-optimized Spinlocks"
+	default n
+	help
+	  Enable cache-optimized spinlocks in LITMUS^RT. When enabled, these
+	  locks are used to protect shared data structures within LITMUS^RT,
+	  such as ready queues. These locks may improve performance of global
+	  schedulers on CPUs with many systems.
+	  
+	  These locks are an implementation of Mellor-Crummey and Scott's
+	  task-fair mutex queue lock (MCSQ). MCSQ locks have O(1) remote memory
+	  references vs. O(m) of Linux's ticket locks (where m is the number
+	  of CPUs). However, this MCSQ implementation's space requirement is O(m).
+	  Specifically, MCSQ needs (m + 1) cache lines. On a 32-core x86_64
+	  platform, where a cache line is 64 bytes, once MCSQ lock takes 2112
+	  bytes (a little over half a page).
+
+	  Warning: Implementation does not (yet) support LOCKDEP, so incorrect
+	  locking order and deadlock may be difficult to detect and debug.
+
+	  NOTES:
+		* LITMUS^RT uses raw_spin_lock_t when this option is disabled.
+	    * MCSQ locks may be safely intermixed with Linux spinlocks, provided
+		  proper locking order.
+		* MCSQ is optimized for the size of an L1 cache line. Cache lines
+		  are usually the same size on all levels, but this may not be
+		  true on all CPU architectures.
+	    * These locks are NOT exported to userspace.
+
+	  Say No if unsure.
+
 config SCHED_CPU_AFFINITY
 	bool "Local Migration Affinity"
 	depends on X86 && SYSFS
