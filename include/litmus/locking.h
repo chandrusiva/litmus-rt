@@ -8,7 +8,6 @@ struct litmus_lock_ops;
  */
 struct litmus_lock {
 	struct litmus_lock_ops *ops;
-	int type;
 };
 
 struct litmus_lock_ops {
