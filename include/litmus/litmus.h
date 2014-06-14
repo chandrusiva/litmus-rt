@@ -8,6 +8,11 @@
 
 #include <litmus/debug_trace.h>
 
+/* To include typedef of lt_t */
+#include "rt_param.h"
+/*To include linked list implementation */
+#include <litmus/list_userspace.h>
+
 #ifdef CONFIG_RELEASE_MASTER
 extern atomic_t release_master_cpu;
 #endif
@@ -326,4 +331,8 @@ static inline int has_control_page(struct task_struct* t)
 
 #endif
 
+struct exec_times{
+	lt_t wcet_val;
+	struct list_head_u list;
+};
 #endif
