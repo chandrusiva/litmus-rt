@@ -335,4 +335,10 @@ struct exec_times{
 	lt_t wcet_val;
 	struct list_head_u list;
 };
+
+/*This is the system criticality level indicator which will be 
+* accessed across all files.
+*/
+extern int sys_cl;
+
 #endif
