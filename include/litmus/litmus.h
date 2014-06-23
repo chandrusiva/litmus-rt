@@ -9,7 +9,7 @@
 #include <litmus/debug_trace.h>
 
 /* To include typedef of lt_t */
-#include "rt_param.h"
+#include <litmus/rt_param.h>
 /*To include linked list implementation */
 #include <litmus/list_userspace.h>
 
