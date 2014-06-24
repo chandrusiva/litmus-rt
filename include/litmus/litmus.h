@@ -8,11 +8,6 @@
 
 #include <litmus/debug_trace.h>
 
-/* To include typedef of lt_t */
-#include <litmus/rt_param.h>
-/*To include linked list implementation */
-#include <litmus/list_userspace.h>
-
 #ifdef CONFIG_RELEASE_MASTER
 extern atomic_t release_master_cpu;
 #endif
@@ -330,15 +325,5 @@ static inline int has_control_page(struct task_struct* t)
 #define TS_SYSCALL_IN_END
 
 #endif
-
-struct exec_times{
-	lt_t wcet_val;
-	struct list_head_u list;
-};
-
-/*This is the system criticality level indicator which will be 
-* accessed across all files.
-*/
-extern int sys_cl;
 
 #endif
