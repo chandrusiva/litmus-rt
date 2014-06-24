@@ -5,9 +5,6 @@
 #ifndef _LINUX_RT_PARAM_H_
 #define _LINUX_RT_PARAM_H_
 
-/*Including litmus.h for exec_times structure */
-#include <litmus/litmus.h>
-
 
 /* Litmus time type. */
 typedef unsigned long long lt_t;
