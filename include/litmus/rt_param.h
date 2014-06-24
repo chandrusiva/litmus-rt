@@ -5,6 +5,8 @@
 #ifndef _LINUX_RT_PARAM_H_
 #define _LINUX_RT_PARAM_H_
 
+/*Including mc_wcet header for exec_times struct*/
+#include <litmus/mc_wcet.h>
 
 /* Litmus time type. */
 typedef unsigned long long lt_t;
