@@ -306,6 +306,8 @@ int sys_cl;
  * (rtspin) and passed to the kernel space. This is applicable only for
  * mixed criticality task systems.
  */
+
+/*
 asmlinkage long sys_set_sys_cl(int* cl)
 {
 	int retval = -EINVAL;
@@ -321,6 +323,8 @@ asmlinkage long sys_set_sys_cl(int* cl)
 	out:
 		return retval;
 }
+*/
+
 
 
 /* sys_null_call() is only used for determining raw system call
