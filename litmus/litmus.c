@@ -21,6 +21,9 @@
 #include <litmus/litmus_proc.h>
 #include <litmus/sched_trace.h>
 
+/*Include mc_global.h for extern declaration of sys_cl variable */
+#include <litmus/mc_global.h>
+
 #ifdef CONFIG_SCHED_CPU_AFFINITY
 #include <litmus/affinity.h>
 #endif
@@ -292,6 +295,33 @@ asmlinkage long sys_query_job_no(unsigned int __user *job)
 
 	return retval;
 }
+
+
+/*Define sys_cl variable here */
+int sys_cl;
+
+/* This syscall sets the System Criticality indicator variable to its 
+ * initial value. The initial value is the lowest criticality level
+ * in the given task set. This is computed in the userspace program
+ * (rtspin) and passed to the kernel space. This is applicable only for
+ * mixed criticality task systems.
+ */
+asmlinkage long sys_set_sys_cl(int* cl)
+{
+	int retval = -EINVAL;
+	if(cl < 0)
+		goto out;
+	retval = get_user(sys_cl, (int*)cl);
+	if (retval != 0)
+	{
+		retval = -EFAULT;
+		goto out;
+	}	
+	printk("Setting up the value of system criticality indicator to %d.\n", sys_cl);
+	out:
+		return retval;
+}
+
 
 /* sys_null_call() is only used for determining raw system call
  * overheads (kernel entry, kernel exit). It has no useful side effects.
