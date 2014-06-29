@@ -30,4 +30,9 @@ __SYSCALL(__NR_release_ts, sys_release_ts)
 #define __NR_null_call				__LSC(11)
 __SYSCALL(__NR_null_call, sys_null_call)
 
-#define NR_litmus_syscalls 12
+/*New system call to get system criticality indicator */
+#define __NR_set_sys_cl				__LSC(12)
+__SYSCALL(__NR_set_sys_cl, sys_set_sys_cl)
+
+/*Addition of a new system call to an already existing total of 12 */
+#define NR_litmus_syscalls 13
