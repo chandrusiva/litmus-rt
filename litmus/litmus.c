@@ -307,9 +307,10 @@ int sys_cl;
  * mixed criticality task systems.
  */
 
-/*
+
 asmlinkage long sys_set_sys_cl(int* cl)
 {
+/*
 	int retval = -EINVAL;
 	if(cl < 0)
 		goto out;
@@ -322,8 +323,14 @@ asmlinkage long sys_set_sys_cl(int* cl)
 	printk("Setting up the value of system criticality indicator to %d.\n", sys_cl);
 	out:
 		return retval;
-}
 */
+
+/*Remove this when the syscall works.. */
+	int retval=0;
+	return retval;
+}
+
+
 
 
 
