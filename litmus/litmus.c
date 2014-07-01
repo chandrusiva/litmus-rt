@@ -310,24 +310,16 @@ int sys_cl;
 
 asmlinkage long sys_set_sys_cl(int* cl)
 {
-/*
+
 	int retval = -EINVAL;
+	printk("Executing syscall in kernel..\n");
 	if(cl < 0)
 		goto out;
 	retval = get_user(sys_cl, (int*)cl);
-	if (retval != 0)
-	{
-		retval = -EFAULT;
-		goto out;
-	}	
 	printk("Setting up the value of system criticality indicator to %d.\n", sys_cl);
+	retval=0;
 	out:
 		return retval;
-*/
-
-/*Remove this when the syscall works.. */
-	int retval=0;
-	return retval;
 }
 
 
