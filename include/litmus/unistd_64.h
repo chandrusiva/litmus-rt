@@ -34,5 +34,8 @@ __SYSCALL(__NR_null_call, sys_null_call)
 #define __NR_set_sys_cl				__LSC(12)
 __SYSCALL(__NR_set_sys_cl, sys_set_sys_cl)
 
+#define __NR_set_wcet_val			__LSC(13)
+__SYSCALL(__NR_set_wcet_val, sys_set_wcet_val)
+
 /*Addition of a new system call to an already existing total of 12 */
-#define NR_litmus_syscalls 13
+#define NR_litmus_syscalls 14

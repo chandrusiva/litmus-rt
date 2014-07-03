@@ -322,7 +322,12 @@ asmlinkage long sys_set_sys_cl(int* cl)
 		return retval;
 }
 
-
+asmlinkage long sys_set_wcet_val(int* wcet_val)
+{	
+	int retval=0;
+	printk("Executing syscall-wcet_val in kernel..\n");
+	return retval;
+}
 
 
 
