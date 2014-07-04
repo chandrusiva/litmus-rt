@@ -322,17 +322,27 @@ asmlinkage long sys_set_sys_cl(int* cl)
 		return retval;
 }
 
-asmlinkage long sys_set_wcet_val(int* wcet_val)
+asmlinkage long sys_set_wcet_val(int* wcet_val, int* num_values)
 {	
-	int wcet_arr[5];
 	int retval=0;
+	int retval2=0;
+	int index;
+	int loop_index;
+	//int wcet_arr[5];
+	int *wcet_ptr=NULL;
 	printk("Executing syscall-wcet_val in kernel..\n");
-	if (copy_from_user(wcet_arr, wcet_val, sizeof(wcet_arr)))
+	retval2 = get_user(index,(int*)num_values);
+	printk("Printing the value of index = %d\n",index);
+	wcet_ptr = kmalloc(sizeof(int)*index, GFP_KERNEL);
+	if(!wcet_ptr)
+		printk("Error in copying num_values to kernel..\n");	
+	if (copy_from_user(wcet_ptr, wcet_val, sizeof(wcet_ptr)))
 	{
 		printk("Syscall-wcet_val failed to copy data..\n");
 	}
-	printk("wcet_arr values are %d, %d, %d, %d and %d.\n",wcet_arr[0],
-		wcet_arr[1],wcet_arr[2],wcet_arr[3],wcet_arr[4]);
+	for(loop_index=0;loop_index<index;loop_index++)
+		printk("wcet_ptr value is %d\n",*(wcet_ptr+loop_index));
+	//printk("wcet_arr values are %d, %d, %d, %d and %d.\n",wcet_arr[0],wcet_arr[1],wcet_arr[2],wcet_arr[3],wcet_arr[4]);
 	return retval;
 }
 
