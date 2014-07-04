@@ -333,16 +333,19 @@ asmlinkage long sys_set_wcet_val(int* wcet_val, int* num_values)
 	printk("Executing syscall-wcet_val in kernel..\n");
 	retval2 = get_user(index,(int*)num_values);
 	printk("Printing the value of index = %d\n",index);
-	wcet_ptr = kmalloc(sizeof(int)*index, GFP_KERNEL);
+	wcet_ptr = kmalloc(((sizeof(int))*index), GFP_ATOMIC);
 	if(!wcet_ptr)
-		printk("Error in copying num_values to kernel..\n");	
-	if (copy_from_user(wcet_ptr, wcet_val, sizeof(wcet_ptr)))
+		printk("kmalloc:Error in allocating space..\n");	
+	if (copy_from_user(wcet_ptr, wcet_val, (sizeof(int)*index)))
 	{
 		printk("Syscall-wcet_val failed to copy data..\n");
 	}
 	for(loop_index=0;loop_index<index;loop_index++)
 		printk("wcet_ptr value is %d\n",*(wcet_ptr+loop_index));
 	//printk("wcet_arr values are %d, %d, %d, %d and %d.\n",wcet_arr[0],wcet_arr[1],wcet_arr[2],wcet_arr[3],wcet_arr[4]);
+	
+	/*Dont forget to copy the data to wcet_val linked list */
+	kfree(wcet_ptr);
 	return retval;
 }
 
