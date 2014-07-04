@@ -312,7 +312,7 @@ asmlinkage long sys_set_sys_cl(int* cl)
 {
 
 	int retval = -EINVAL;
-	printk("Executing syscall in kernel..\n");
+	printk("Executing syscall-sys_cl in kernel..\n");
 	if(cl < 0)
 		goto out;
 	retval = get_user(sys_cl, (int*)cl);
@@ -324,8 +324,15 @@ asmlinkage long sys_set_sys_cl(int* cl)
 
 asmlinkage long sys_set_wcet_val(int* wcet_val)
 {	
+	int wcet_arr[5];
 	int retval=0;
 	printk("Executing syscall-wcet_val in kernel..\n");
+	if (copy_from_user(wcet_arr, wcet_val, sizeof(wcet_arr)))
+	{
+		printk("Syscall-wcet_val failed to copy data..\n");
+	}
+	printk("wcet_arr values are %d, %d, %d, %d and %d.\n",wcet_arr[0],
+		wcet_arr[1],wcet_arr[2],wcet_arr[3],wcet_arr[4]);
 	return retval;
 }
 
