@@ -24,8 +24,8 @@
 /*Include mc_global.h for extern declaration of sys_cl variable */
 #include <litmus/mc_global.h>
 
-/*Include list_userspace to support linked list creation */
-#include <litmus/list_userspace.h>
+/*Include exec_time struct declaration. This also holds the linked list header file */
+#include <litmus/mc_wcet.h>
 
 #ifdef CONFIG_SCHED_CPU_AFFINITY
 #include <litmus/affinity.h>
@@ -329,8 +329,19 @@ asmlinkage long sys_set_wcet_val(int* wcet_val, int* num_values)
 {	
 	int retval=0,retval2=0,index,loop_index;	
 	int *wcet_ptr=NULL;
+	struct task_struct *target;
+	/*Declarations for linked list creation */
+	struct exec_times *temp;
+	struct list_head_u *pos;
+	struct exec_times mylist_k;	
 	
 	printk("Executing syscall-wcet_val in kernel..\n");
+	read_lock_irq(&tasklist_lock);
+	if (!(target = find_task_by_vpid(pid))) {
+		retval = -ESRCH;
+		goto out_unlock;
+	}
+	
 	retval2 = get_user(index,(int*)num_values);
 	wcet_ptr = kmalloc(((sizeof(int))*index), GFP_ATOMIC);
 	if(!wcet_ptr)
@@ -338,11 +349,26 @@ asmlinkage long sys_set_wcet_val(int* wcet_val, int* num_values)
 	if (copy_from_user(wcet_ptr, wcet_val, (sizeof(int)*index)))
 	{
 		printk("Syscall-wcet_val failed to copy data..\n");
+		retval = -EFAULT;
+		goto out;
 	}
+	
+	INIT_LIST_HEAD_U(&mylist_k.list);
+	for(loop_index = 0; loop_index < index; loop_index++)
+	{
+		temp = (struct exec_times *) kmalloc (sizeof(struct exec_times),GFP_ATOMIC);
+		temp->wcet_val= (lt_t) *(wcet_ptr+loop_index);
+		list_add_tail_u(&(temp->list),&(mylist_k.list));
+	}
+	
+	target->rt_param.task_params.mylist = &mylist_k;
 		
 	/*Dont forget to copy the data to wcet_val linked list */
 	kfree(wcet_ptr);
-	return retval;
+	out_unlock:
+		read_unlock_irq(&tasklist_lock);
+	out:
+		return retval;
 }
 
 
