@@ -87,7 +87,7 @@ struct rt_task {
 	budget_policy_t  budget_policy;  /* ignored by pfair */
 	release_policy_t release_policy;
 	/* This is the list structure which contains multiple wcet values */
-	struct exec_times* mylist_k;
+	struct exec_times* mylist;
 };
 
 union np_flag {
