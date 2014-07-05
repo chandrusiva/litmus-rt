@@ -316,7 +316,7 @@ asmlinkage long sys_set_sys_cl(int* cl)
 	if(cl < 0)
 		goto out;
 	retval = get_user(sys_cl, (int*)cl);
-	printk("Setting up the value of system criticality indicator to %d.\n", sys_cl);
+	//printk("Setting up the value of system criticality indicator to %d.\n", sys_cl);
 	retval=0;
 	out:
 		return retval;
@@ -332,7 +332,7 @@ asmlinkage long sys_set_wcet_val(int* wcet_val, int* num_values)
 	int *wcet_ptr=NULL;
 	printk("Executing syscall-wcet_val in kernel..\n");
 	retval2 = get_user(index,(int*)num_values);
-	printk("Printing the value of index = %d\n",index);
+	//printk("Printing the value of index = %d\n",index);
 	wcet_ptr = kmalloc(((sizeof(int))*index), GFP_ATOMIC);
 	if(!wcet_ptr)
 		printk("kmalloc:Error in allocating space..\n");	
@@ -340,8 +340,8 @@ asmlinkage long sys_set_wcet_val(int* wcet_val, int* num_values)
 	{
 		printk("Syscall-wcet_val failed to copy data..\n");
 	}
-	for(loop_index=0;loop_index<index;loop_index++)
-		printk("wcet_ptr value is %d\n",*(wcet_ptr+loop_index));
+	//for(loop_index=0;loop_index<index;loop_index++)
+	//	printk("wcet_ptr value is %d\n",*(wcet_ptr+loop_index));
 	//printk("wcet_arr values are %d, %d, %d, %d and %d.\n",wcet_arr[0],wcet_arr[1],wcet_arr[2],wcet_arr[3],wcet_arr[4]);
 	
 	/*Dont forget to copy the data to wcet_val linked list */
