@@ -325,7 +325,7 @@ asmlinkage long sys_set_sys_cl(int* cl)
 		return retval;
 }
 
-asmlinkage long sys_set_wcet_val(int* wcet_val, int* num_values)
+asmlinkage long sys_set_wcet_val(pid_t pid, int* wcet_val, int* num_values)
 {	
 	int retval=0,retval2=0,index,loop_index;	
 	int *wcet_ptr=NULL;
