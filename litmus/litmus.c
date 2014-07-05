@@ -24,6 +24,9 @@
 /*Include mc_global.h for extern declaration of sys_cl variable */
 #include <litmus/mc_global.h>
 
+/*Include list_userspace to support linked list creation */
+#include <litmus/list_userspace.h>
+
 #ifdef CONFIG_SCHED_CPU_AFFINITY
 #include <litmus/affinity.h>
 #endif
@@ -324,15 +327,11 @@ asmlinkage long sys_set_sys_cl(int* cl)
 
 asmlinkage long sys_set_wcet_val(int* wcet_val, int* num_values)
 {	
-	int retval=0;
-	int retval2=0;
-	int index;
-	int loop_index;
-	//int wcet_arr[5];
+	int retval=0,retval2=0,index,loop_index;	
 	int *wcet_ptr=NULL;
+	
 	printk("Executing syscall-wcet_val in kernel..\n");
 	retval2 = get_user(index,(int*)num_values);
-	//printk("Printing the value of index = %d\n",index);
 	wcet_ptr = kmalloc(((sizeof(int))*index), GFP_ATOMIC);
 	if(!wcet_ptr)
 		printk("kmalloc:Error in allocating space..\n");	
@@ -340,10 +339,7 @@ asmlinkage long sys_set_wcet_val(int* wcet_val, int* num_values)
 	{
 		printk("Syscall-wcet_val failed to copy data..\n");
 	}
-	//for(loop_index=0;loop_index<index;loop_index++)
-	//	printk("wcet_ptr value is %d\n",*(wcet_ptr+loop_index));
-	//printk("wcet_arr values are %d, %d, %d, %d and %d.\n",wcet_arr[0],wcet_arr[1],wcet_arr[2],wcet_arr[3],wcet_arr[4]);
-	
+		
 	/*Dont forget to copy the data to wcet_val linked list */
 	kfree(wcet_ptr);
 	return retval;
