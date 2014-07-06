@@ -362,8 +362,16 @@ asmlinkage long sys_set_wcet_val(pid_t pid, int* wcet_val, int* num_values)
 	}
 	
 	target->rt_param.task_params.mylist = &mylist_k;
+
+	/*Remove this later..  Use for debugging purpose only.. */
+	/*
+	list_for_each_u(pos, &(target->rt_param.task_params.mylist->list))
+	{
+		temp= list_entry_u(pos, struct exec_times, list);
+		printk("WCET value = %d\n", (int) temp->wcet_val);
+	}
+	*/
 		
-	/*Dont forget to copy the data to wcet_val linked list */
 	kfree(wcet_ptr);
 	out_unlock:
 		read_unlock_irq(&tasklist_lock);
