@@ -304,23 +304,36 @@ asmlinkage long sys_query_job_no(unsigned int __user *job)
 int sys_cl;
 
 /* This syscall sets the System Criticality indicator variable to its 
- * initial value. The initial value is the lowest criticality level
+ * initial value and the task criticality level. The initial value is
+ * the lowest criticality level
  * in the given task set. This is computed in the userspace program
  * (rtspin) and passed to the kernel space. This is applicable only for
  * mixed criticality task systems.
  */
 
 
-asmlinkage long sys_set_sys_cl(int* cl)
+asmlinkage long sys_set_sys_cl(pid_t pid, int* cl, int* task_cli)
 {
 
 	int retval = -EINVAL;
+	struct task_struct *target;
 	printk("Executing syscall-sys_cl in kernel..\n");
-	if(cl < 0)
+	if(cl < 0 || task_cli < 0)
 		goto out;
 	retval = get_user(sys_cl, (int*)cl);
-	//printk("Setting up the value of system criticality indicator to %d.\n", sys_cl);
+	printk("Setting up the value of system criticality indicator to %d.\n", sys_cl);	
+	read_lock_irq(&tasklist_lock);
+	if (!(target = find_task_by_vpid(pid))) {
+		retval = -ESRCH;
+		goto out_unlock;
+	}	
+	retval = get_user(target->rt_param.task_params.task_cl, (int*)task_cli);
+	
 	retval=0;
+	
+	out_unlock:
+		read_unlock_irq(&tasklist_lock);
+	printk("Setting up task criticality level to %d.\n",target->rt_param.task_params.task_cl);
 	out:
 		return retval;
 }
