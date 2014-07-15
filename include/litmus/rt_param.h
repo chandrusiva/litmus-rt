@@ -88,6 +88,8 @@ struct rt_task {
 	release_policy_t release_policy;
 	/* This is the list structure which contains multiple wcet values */
 	struct exec_times* mylist;
+	/*This holds the criticality level of the task*/
+	lt_t		task_cl;
 };
 
 union np_flag {
