@@ -83,7 +83,7 @@ static struct task_struct* edf_vd_schedule(struct task_struct * prev)
 
         /* also check for (in-)voluntary job completions */
         if (out_of_time || job_completed) {
-                demo_job_completion(prev, out_of_time);
+                edf_vd_job_completion(prev, out_of_time);
                 resched = 1;
         }
 
