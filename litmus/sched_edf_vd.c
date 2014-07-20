@@ -47,7 +47,7 @@ static void edf_vd_task_new(struct task_struct *tsk, int on_runqueue,
                           int is_running)
 {
         unsigned long flags; /* needed to store the IRQ flags */
-        edf_vd_domain_t *state = cpu_state_for(get_partition(tsk));
+        edf_vd_domain_t *state = cpu_state_for(0);
         lt_t now;
 
         TRACE_TASK(tsk, "is a new RT task %llu (on_rq:%d, running:%d)\n",
@@ -79,7 +79,7 @@ static void edf_vd_task_new(struct task_struct *tsk, int on_runqueue,
 static void edf_vd_task_exit(struct task_struct *tsk)
 {
         unsigned long flags; /* needed to store the IRQ flags */
-        edf_vd_domain_t *state = cpu_state_for(get_partition(tsk));
+        edf_vd_domain_t *state = cpu_state_for(0);
 
         /* acquire the lock protecting the state and disable interrupts */
         raw_spin_lock_irqsave(&state->local_queues.ready_lock, flags);
@@ -199,7 +199,7 @@ static struct task_struct* edf_vd_schedule(struct task_struct * prev)
 static void edf_vd_task_resume(struct task_struct  *tsk)
 {
         unsigned long flags; /* needed to store the IRQ flags */
-        edf_vd_domain_t *state = cpu_state_for(get_partition(tsk));
+        edf_vd_domain_t *state = cpu_state_for(0);
         lt_t now;
 
         TRACE_TASK(tsk, "wake_up at %llu\n", litmus_clock());
@@ -231,7 +231,7 @@ static void edf_vd_task_resume(struct task_struct  *tsk)
 
 static long edf_vd_admit_task(struct task_struct* tsk)
 {
-	if (task_cpu(tsk) == get_partition(tsk)) {
+	if (task_cpu(tsk) == 0) {
                 TRACE_TASK(tsk, "accepted by demo plugin.\n");
                 return 0;
         } else
@@ -246,8 +246,8 @@ static long edf_vd_get_domain_proc_info(struct domain_proc_info **ret)
 
 static void edf_vd_setup_domain_proc(void)
 {
-        int i, cpu;
-        int num_rt_cpus = num_online_cpus();
+   
+        int num_rt_cpus = 1;
 
         struct cd_mapping *cpu_map, *domain_map;
 
@@ -256,34 +256,30 @@ static void edf_vd_setup_domain_proc(void)
         edf_vd_domain_proc_info.num_cpus = num_rt_cpus;
         edf_vd_domain_proc_info.num_domains = num_rt_cpus;
 
-        i = 0;
-        for_each_online_cpu(cpu) {
-                cpu_map = &edf_vd_domain_proc_info.cpu_to_domains[i];
-                domain_map = &edf_vd_domain_proc_info.domain_to_cpus[i];
+                cpu_map = &edf_vd_domain_proc_info.cpu_to_domains[0];
+                domain_map = &edf_vd_domain_proc_info.domain_to_cpus[0];
 
-                cpu_map->id = cpu;
-                domain_map->id = i;
-                cpumask_set_cpu(i, cpu_map->mask);
-                cpumask_set_cpu(cpu, domain_map->mask);
-                ++i;
-        }
+                cpu_map->id = 0;
+                domain_map->id = 0;
+                cpumask_set_cpu(0, cpu_map->mask);
+                cpumask_set_cpu(0, domain_map->mask);
+                
+        
 }
 
 static long edf_vd_activate_plugin(void)
     {
             //The following is done in domain_init in built-in plugins
-	    int cpu;
             edf_vd_domain_t *state;
     
-            for_each_online_cpu(cpu) {
-                   TRACE("Initializing CPU%d...\n", cpu);
+                   TRACE("Initializing CPU%d...\n", 0);
     
-                   state = cpu_state_for(cpu);
+                   state = cpu_state_for(0);
    
-                   state->cpu = cpu;
+                   state->cpu = 0;
                    state->scheduled = NULL;
                    edf_domain_init(&state->local_queues, edf_vd_check_for_preemption_on_release, NULL);
-            }
+            
    		
 	    edf_vd_setup_domain_proc();
             return 0;
