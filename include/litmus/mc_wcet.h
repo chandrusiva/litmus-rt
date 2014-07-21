@@ -11,6 +11,7 @@ typedef unsigned long long lt_t;
 
 struct exec_times{
 	lt_t wcet_val;
+	lt_t vd;
 	struct list_head_u list;
 };
 
