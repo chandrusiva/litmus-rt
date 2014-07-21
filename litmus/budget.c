@@ -6,6 +6,11 @@
 #include <litmus/preempt.h>
 
 #include <litmus/budget.h>
+#include <litmus/mc_global.h>
+
+//Define extern variables here
+int budget_flag=0;
+int temp_sys_cl;
 
 struct enforcement_timer {
 	/* The enforcement timer is used to accurately police
@@ -26,6 +31,14 @@ static enum hrtimer_restart on_enforcement_timeout(struct hrtimer *timer)
 	local_irq_save(flags);
 	TRACE("enforcement timer fired.\n");
 	et->armed = 0;
+	/*Store sys_cl and change it*/
+	budget_flag++;
+	if(budget_flag==1)
+		temp_sys_cl = sys_cl;	
+	if(sys_cl==1)
+		printk("The highest criticality job has overrun its budget..");
+	sys_cl--;
+	
 	/* activate scheduler */
 	litmus_reschedule_local();
 	local_irq_restore(flags);
