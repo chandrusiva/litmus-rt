@@ -338,14 +338,15 @@ asmlinkage long sys_set_sys_cl(pid_t pid, int* cl, int* task_cli)
 		return retval;
 }
 
-asmlinkage long sys_set_wcet_val(pid_t pid, int* wcet_val, int* num_values)
+asmlinkage long sys_set_wcet_val(pid_t pid, unsigned long long* wcet_val, unsigned long long* vd ,int* num_values)
 {	
 	int retval=0,retval2=0,index,loop_index;	
-	int *wcet_ptr=NULL;
+	lt_t *wcet_ptr=NULL;
+	lt_t *vd_ptr=NULL;
 	struct task_struct *target;
 	/*Declarations for linked list creation */
 	struct exec_times *temp;
-	//struct list_head_u *pos;
+	struct list_head_u *pos;
 	struct exec_times mylist_k;	
 	
 	printk("Executing syscall-wcet_val in kernel..\n");
@@ -356,12 +357,26 @@ asmlinkage long sys_set_wcet_val(pid_t pid, int* wcet_val, int* num_values)
 	}
 	
 	retval2 = get_user(index,(int*)num_values);
-	wcet_ptr = kmalloc(((sizeof(int))*index), GFP_ATOMIC);
+	wcet_ptr = kmalloc(((sizeof(lt_t))*index), GFP_ATOMIC);
+	vd_ptr = kmalloc(((sizeof(lt_t))*index), GFP_ATOMIC);
+	
 	if(!wcet_ptr)
 		printk("kmalloc:Error in allocating space..\n");	
-	if (copy_from_user(wcet_ptr, wcet_val, (sizeof(int)*index)))
+
+	if(!vd_ptr)
+		printk("kmalloc:Error in allocating space..\n");	
+	
+	if (copy_from_user(wcet_ptr, wcet_val, (sizeof(lt_t)*index)))
 	{
-		printk("Syscall-wcet_val failed to copy data..\n");
+		printk("Syscall-wcet_val failed to copy wcet values..\n");
+		retval = -EFAULT;
+		goto out;
+	}
+
+	
+	if (copy_from_user(vd_ptr, vd, (sizeof(lt_t)*index)))
+	{
+		printk("Syscall-wcet_val failed to copy vd values..\n");
 		retval = -EFAULT;
 		goto out;
 	}
@@ -370,7 +385,8 @@ asmlinkage long sys_set_wcet_val(pid_t pid, int* wcet_val, int* num_values)
 	for(loop_index = 0; loop_index < index; loop_index++)
 	{
 		temp = (struct exec_times *) kmalloc (sizeof(struct exec_times),GFP_ATOMIC);
-		temp->wcet_val= (lt_t) *(wcet_ptr+loop_index);
+		temp->wcet_val= *(wcet_ptr+loop_index);	
+		temp->vd=  *(vd_ptr+loop_index);
 		list_add_tail_u(&(temp->list),&(mylist_k.list));
 	}
 	
@@ -379,15 +395,18 @@ asmlinkage long sys_set_wcet_val(pid_t pid, int* wcet_val, int* num_values)
 	
 	/*Remove this later..  Use for debugging purpose only.. */
 	//Include *pos declaration when needed
-	/*
+	
 	list_for_each_u(pos, &(target->rt_param.task_params.mylist->list))
 	{
 		temp= list_entry_u(pos, struct exec_times, list);
-		printk("WCET value = %d\n", (int) temp->wcet_val);
+		printk("WCET value = %llu\n", temp->wcet_val);	
+		printk("VD value = %llu\n", temp->vd);
 	}
-	*/
+	
 		
 	kfree(wcet_ptr);
+	kfree(vd_ptr);
+	
 	out_unlock:
 		read_unlock_irq(&tasklist_lock);
 	out:
