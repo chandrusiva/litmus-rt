@@ -12,6 +12,10 @@
 #include <litmus/budget.h>
 #include <litmus/litmus_proc.h>
 
+//Include header containing global extern variables
+#include <litmus/mc_global.h>
+
+
 //This struct is not typedefd in tutorial
 typedef struct {
 	rt_domain_t 		local_queues;
@@ -129,17 +133,18 @@ static struct task_struct* edf_vd_schedule(struct task_struct * prev)
         struct task_struct *next = NULL;
 
         /* prev's task state */
-        int exists, out_of_time, job_completed, self_suspends, preempt, resched;
-
-        raw_spin_lock(&local_state->local_queues.ready_lock);
+        int exists, job_completed, self_suspends, preempt, resched;
+	
+	int out_of_time;
+        
+	raw_spin_lock(&local_state->local_queues.ready_lock);
 
         BUG_ON(local_state->scheduled && local_state->scheduled != prev);
         BUG_ON(local_state->scheduled && !is_realtime(prev));
 
         exists = local_state->scheduled != NULL;
         self_suspends = exists && !is_running(prev);
-        out_of_time   = exists && budget_enforced(prev)
-                && budget_exhausted(prev);
+        out_of_time   = exists && budget_exhausted(prev);
         job_completed = exists && is_completed(prev);
 
         /* preempt is true if task `prev` has lower priority than something on
@@ -154,8 +159,9 @@ static struct task_struct* edf_vd_schedule(struct task_struct * prev)
                 resched = 1;
 
         /* also check for (in-)voluntary job completions */
-        if (out_of_time || job_completed) {
-                edf_vd_job_completion(prev, out_of_time);
+        //There is no budget exhausted in mc systems
+	if (job_completed || out_of_time) {
+                edf_vd_job_completion(prev,0);
                 resched = 1;
         }
 
@@ -165,7 +171,19 @@ static struct task_struct* edf_vd_schedule(struct task_struct * prev)
                  */
                 if (exists && !self_suspends)
                         edf_vd_requeue(prev, local_state);
-                next = __take_ready(&local_state->local_queues);
+		do{
+                	next = __take_ready(&local_state->local_queues);
+			if(next==NULL)
+			{
+				//Re-initialize everything
+				sys_cl = temp_sys_cl;
+				budget_flag=0;	
+				break;
+			}
+		}while(next->rt_param.task_params.task_cl>sys_cl);
+
+
+
         } else
                 /* No preemption is required. */
                 next = local_state->scheduled;
