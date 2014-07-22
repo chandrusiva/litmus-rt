@@ -159,7 +159,7 @@ static struct task_struct* edf_vd_schedule(struct task_struct * prev)
                 resched = 1;
 
         /* also check for (in-)voluntary job completions */
-        //There is no budget exhausted in mc systems
+        //There is no budget enforcement option in mc systems, its mandatory..
 	if (job_completed || out_of_time) {
                 edf_vd_job_completion(prev,0);
                 resched = 1;
@@ -169,13 +169,19 @@ static struct task_struct* edf_vd_schedule(struct task_struct * prev)
                 /* First check if the previous task goes back onto the ready
                  * queue, which it does if it did not self_suspend.
                  */
-                if (exists && !self_suspends)
-                        edf_vd_requeue(prev, local_state);
+                //Requeue after checking whether the task is at its allowable crit level..
+		if (exists && !self_suspends)
+		{
+                        if(prev->rt_param.task_params.task_cl <= sys_cl)
+				edf_vd_requeue(prev, local_state);
+		}
+		
 		do{
                 	next = __take_ready(&local_state->local_queues);
 			if(next==NULL)
 			{
 				//Re-initialize everything
+				TRACE("ready queue is empty. syscl reinitialized to its normal value\n");
 				sys_cl = temp_sys_cl;
 				budget_flag=0;	
 				break;
