@@ -302,6 +302,7 @@ asmlinkage long sys_query_job_no(unsigned int __user *job)
 
 /*Define sys_cl variable here */
 int sys_cl;
+int temp_sys_cl;
 
 /* This syscall sets the System Criticality indicator variable to its 
  * initial value and the task criticality level. The initial value is
@@ -321,6 +322,9 @@ asmlinkage long sys_set_sys_cl(pid_t pid, int* cl, int* task_cli)
 	if(cl < 0 || task_cli < 0)
 		goto out;
 	retval = get_user(sys_cl, (int*)cl);
+	temp_sys_cl = sys_cl;
+	
+	printk("Setting up the value of temp system criticality indicator to %d.\n", temp_sys_cl);	
 	//printk("Setting up the value of system criticality indicator to %d.\n", sys_cl);	
 	read_lock_irq(&tasklist_lock);
 	if (!(target = find_task_by_vpid(pid))) {
