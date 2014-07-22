@@ -10,7 +10,6 @@
 
 //Define extern variables here
 int budget_flag=0;
-int temp_sys_cl;
 
 struct enforcement_timer {
 	/* The enforcement timer is used to accurately police
@@ -31,11 +30,9 @@ static enum hrtimer_restart on_enforcement_timeout(struct hrtimer *timer)
 	local_irq_save(flags);
 	TRACE("enforcement timer fired.\n");
 	et->armed = 0;
-	/*Store sys_cl and change it*/
+	/*Change sys_cl*/
 	TRACE("Incrementing the budget flag..\n");
 	budget_flag++;
-	if(budget_flag==1)
-		temp_sys_cl = sys_cl;	
 	if(sys_cl==1)
 		TRACE("the highest criticality job has overrun its budget.\n");
 	TRACE("The system crit level is increased to the next higher level, which is decrease in number..\n");
