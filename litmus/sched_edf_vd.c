@@ -62,7 +62,10 @@ static void edf_vd_task_new(struct task_struct *tsk, int on_runqueue,
 
         now = litmus_clock();
 
-        /* the first job exists starting as of right now */
+        //update the wcet and vd of this task
+	update_wcet_vd(tsk);
+	
+	/* the first job exists starting as of right now */
         release_at(tsk, now);
 
         if (is_running) {
@@ -117,9 +120,12 @@ static int edf_vd_check_for_preemption_on_release(rt_domain_t *local_queues)
 /* this helper is called when task `prev` exhausted its budget or when
  * it signaled a job completion */
 static void edf_vd_job_completion(struct task_struct *prev, int budget_exhausted)
-{
-        /* call common helper code to compute the next release time, deadline,
-         * etc. */
+{	
+	//update the wcet and vd for next job
+	update_wcet_vd(prev);
+
+	/* call common helper code to compute the next release time, deadline,
+         * etc. */	
         prepare_for_next_period(prev);
 }
 
@@ -233,7 +239,10 @@ static void edf_vd_task_resume(struct task_struct  *tsk)
 
         now = litmus_clock();
 	
+	//update the wcet and vd for the resumed job
+	update_wcet_vd(tsk);
 	
+	//allow this to the ready to release queue only if task_cl is legal.
         if(tsk->rt_param.task_params.task_cl <= sys_cl)
 	 {
         	if (is_sporadic(tsk) && is_tardy(tsk, now)) {
@@ -259,7 +268,7 @@ static void edf_vd_task_resume(struct task_struct  *tsk)
 static long edf_vd_admit_task(struct task_struct* tsk)
 {
 	if (task_cpu(tsk) == 0) {
-                TRACE_TASK(tsk, "accepted by demo plugin.\n");
+                TRACE_TASK(tsk, "accepted by edf vd plugin.\n");
                 return 0;
         } else
                 return -EINVAL;
