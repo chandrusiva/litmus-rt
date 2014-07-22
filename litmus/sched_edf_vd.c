@@ -232,24 +232,27 @@ static void edf_vd_task_resume(struct task_struct  *tsk)
         raw_spin_lock_irqsave(&state->local_queues.ready_lock, flags);
 
         now = litmus_clock();
-
-        if (is_sporadic(tsk) && is_tardy(tsk, now)) {
+	
+	
+        if(tsk->rt_param.task_params.task_cl <= sys_cl)
+	 {
+        	if (is_sporadic(tsk) && is_tardy(tsk, now)) {
                 /* This sporadic task was gone for a "long" time and woke up past
                  * its deadline. Give it a new budget by triggering a job
                  * release. */
-                release_at(tsk, now);
-        }
+                	release_at(tsk, now);
+        	}
 
-        /* This check is required to avoid races with tasks that resume before
-         * the scheduler "noticed" that it resumed. That is, the wake up may
-         * race with the call to schedule(). */
-        if (state->scheduled != tsk)
-	{
-                edf_vd_requeue(tsk, state);
-		if (edf_preemption_needed(&state->local_queues, state->scheduled))
-                           preempt_if_preemptable(state->scheduled, state->cpu);	
+       		 /* This check is required to avoid races with tasks that resume before
+	         * the scheduler "noticed" that it resumed. That is, the wake up may
+	         * race with the call to schedule(). */
+	        if (state->scheduled != tsk)
+		{
+        	        edf_vd_requeue(tsk, state);
+			if (edf_preemption_needed(&state->local_queues, state->scheduled))
+                        	   preempt_if_preemptable(state->scheduled, state->cpu);	
+		}
 	}
-
         raw_spin_unlock_irqrestore(&state->local_queues.ready_lock, flags);
 }
 
