@@ -32,11 +32,13 @@ static enum hrtimer_restart on_enforcement_timeout(struct hrtimer *timer)
 	TRACE("enforcement timer fired.\n");
 	et->armed = 0;
 	/*Store sys_cl and change it*/
+	TRACE("Incrementing the budget flag..\n");
 	budget_flag++;
 	if(budget_flag==1)
 		temp_sys_cl = sys_cl;	
 	if(sys_cl==1)
-		printk("The highest criticality job has overrun its budget..");
+		TRACE("the highest criticality job has overrun its budget.\n");
+	TRACE("The system crit level is increased to the next higher level, which is decrease in number..\n");
 	sys_cl--;
 	
 	/* activate scheduler */
