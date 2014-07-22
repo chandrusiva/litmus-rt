@@ -37,7 +37,11 @@ static struct domain_proc_info edf_vd_domain_proc_info;
 //rt_domain is passed directly in builtin, cpu entry is passed here.
 static void edf_vd_requeue(struct task_struct *tsk, edf_vd_domain_t *cpu_state)
 {
-        if (is_released(tsk, litmus_clock())) {
+      
+        //update the wcet and vd of this task
+	update_wcet_vd(tsk);
+	
+	if (is_released(tsk, litmus_clock())) {
                 /* Uses __add_ready() instead of add_ready() because we already
                  * hold the ready lock. */
                 __add_ready(&cpu_state->local_queues, tsk);
