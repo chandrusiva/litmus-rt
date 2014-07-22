@@ -7,4 +7,5 @@ void release_at(struct task_struct *t, lt_t start);
 long default_wait_for_release_at(lt_t release_time);
 long complete_job(void);
 
+void update_wcet_vd(struct task_struct *t);
 #endif
