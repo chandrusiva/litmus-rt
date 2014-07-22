@@ -103,8 +103,8 @@ static void arm_enforcement_timer(struct enforcement_timer* et,
 void update_enforcement_timer(struct task_struct* t)
 {
 	struct enforcement_timer* et = &__get_cpu_var(budget_timer);
-
-	if (t && budget_precisely_enforced(t)) {
+	/*This is a mc task system. Budget enforcement should be default */
+	if (t) {
 		/* Make sure we call into the scheduler when this budget
 		 * expires. */
 		arm_enforcement_timer(et, t);
