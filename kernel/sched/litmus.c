@@ -261,7 +261,7 @@ static void task_tick_litmus(struct rq *rq, struct task_struct *p, int queued)
 	if (is_realtime(p) && !queued) {
 		update_time_litmus(rq, p);
 		/* budget check for QUANTUM_ENFORCEMENT tasks */
-		if (budget_enforced(p) && budget_exhausted(p)) {
+		if (budget_exhausted(p)) {
 			litmus_reschedule_local();
 		}
 	}
