@@ -233,11 +233,11 @@ static struct task_struct* psnedf_schedule(struct task_struct * prev)
 		 * the appropriate queue.
 		 */
 		if (pedf->scheduled && !blocks)
-		{
+		//{
 			/*Check for task criticality level */
-			if(prev->rt_param.task_params.task_cl <= sys_cl)
+		//	if(prev->rt_param.task_params.task_cl <= sys_cl)
 				requeue(pedf->scheduled, edf);
-		}
+		//}
 		
 		/* Again select a task which satisfies the criticality level condition */
 		//do{		
