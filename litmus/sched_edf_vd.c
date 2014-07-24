@@ -337,7 +337,7 @@ static long edf_vd_deactivate_plugin(void)
 static struct sched_plugin edf_vd_plugin __cacheline_aligned_in_smp = {
 	.plugin_name		= "EDF-VD",
 	.task_new		= edf_vd_task_new,
-	//.complete_job		= complete_job,
+	.complete_job		= complete_job,
 	.task_exit		= edf_vd_task_exit,
 	.schedule		= edf_vd_schedule,
 	.task_wake_up		= edf_vd_task_resume,
