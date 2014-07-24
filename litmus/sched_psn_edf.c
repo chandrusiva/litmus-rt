@@ -238,20 +238,22 @@ static struct task_struct* psnedf_schedule(struct task_struct * prev)
 			if(prev->rt_param.task_params.task_cl <= sys_cl)
 				requeue(pedf->scheduled, edf);
 		}
+		
 		/* Again select a task which satisfies the criticality level condition */
-		do{		
+		//do{		
 			next = __take_ready(edf);
-			if(next==NULL)
-			{
+		//	if(next==NULL)
+		//	{
 			       /*There are no more legal tasks in the ready queue. So
 				* bring back the sys_cl value to default and reset budget flag 
 				*/
-				TRACE("ready queue is empty and sys_cl is reset\n");
-				sys_cl = temp_sys_cl;
-				budget_flag = 0;
-				break;
-			}
-		}while (next->rt_param.task_params.task_cl > sys_cl);
+		//		TRACE("ready queue is empty and sys_cl is reset\n");
+		//		sys_cl = temp_sys_cl;
+		//		budget_flag = 0;
+		//		break;
+		
+		//	}
+		//}while (next->rt_param.task_params.task_cl > sys_cl);
 
 	} else
 		/* Only override Linux scheduler if we have a real-time task
