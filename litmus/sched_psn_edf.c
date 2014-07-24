@@ -26,6 +26,9 @@
 /* to set up domain/cpu mappings */
 #include <litmus/litmus_proc.h>
 
+/*Include header containing of global extern variables */
+#include <litmus/mc_global.h>
+
 typedef struct {
 	rt_domain_t 		domain;
 	int          		cpu;
@@ -187,9 +190,7 @@ static struct task_struct* psnedf_schedule(struct task_struct * prev)
 	/* (0) Determine state */
 	exists      = pedf->scheduled != NULL;
 	blocks      = exists && !is_running(pedf->scheduled);
-	out_of_time = exists &&
-				  budget_enforced(pedf->scheduled) &&
-				  budget_exhausted(pedf->scheduled);
+	out_of_time = exists && budget_exhausted(pedf->scheduled);
 	np 	    = exists && is_np(pedf->scheduled);
 	sleep	    = exists && is_completed(pedf->scheduled);
 	preempt     = edf_preemption_needed(edf, prev);
@@ -232,8 +233,26 @@ static struct task_struct* psnedf_schedule(struct task_struct * prev)
 		 * the appropriate queue.
 		 */
 		if (pedf->scheduled && !blocks)
-			requeue(pedf->scheduled, edf);
-		next = __take_ready(edf);
+		{
+			/*Check for task criticality level */
+			if(prev->rt_param.task_params.task_cl <= sys_cl)
+				requeue(pedf->scheduled, edf);
+		}
+		/* Again select a task which satisfies the criticality level condition */
+		do{		
+			next = __take_ready(edf);
+			if(next==NULL)
+			{
+			       /*There are no more legal tasks in the ready queue. So
+				* bring back the sys_cl value to default and reset budget flag 
+				*/
+				TRACE("ready queue is empty and sys_cl is reset\n");
+				sys_cl = temp_sys_cl;
+				budget_flag = 0;
+				break;
+			}
+		}while (next->rt_param.task_params.task_cl > sys_cl);
+
 	} else
 		/* Only override Linux scheduler if we have a real-time task
 		 * scheduled that needs to continue.
@@ -303,6 +322,11 @@ static void psnedf_task_wake_up(struct task_struct *task)
 	raw_spin_lock_irqsave(&pedf->slock, flags);
 	BUG_ON(is_queued(task));
 	now = litmus_clock();
+	
+	/*Allow this task only if it satisies the criticality level condition */
+	if(task->rt_param.task_params.task_cl <= sys_cl)
+	{
+	
 	if (is_sporadic(task) && is_tardy(task, now)
 #ifdef CONFIG_LITMUS_LOCKING
 	/* We need to take suspensions because of semaphores into
@@ -326,6 +350,8 @@ static void psnedf_task_wake_up(struct task_struct *task)
 	if (pedf->scheduled != task) {
 		requeue(task, edf);
 		psnedf_preempt_check(pedf);
+	}
+
 	}
 
 	raw_spin_unlock_irqrestore(&pedf->slock, flags);
