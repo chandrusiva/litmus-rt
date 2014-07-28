@@ -325,7 +325,7 @@ asmlinkage long sys_set_sys_cl(pid_t pid, int* cl, int* task_cli)
 	temp_sys_cl = sys_cl;
 
 	printk("Setting up the value of temp system criticality indicator to %d.\n", temp_sys_cl);	
-	//printk("Setting up the value of system criticality indicator to %d.\n", sys_cl);	
+	printk("Setting up the value of system criticality indicator to %d.\n", sys_cl);	
 	read_lock_irq(&tasklist_lock);
 	if (!(target = find_task_by_vpid(pid))) {
 		retval = -ESRCH;
@@ -337,7 +337,7 @@ asmlinkage long sys_set_sys_cl(pid_t pid, int* cl, int* task_cli)
 
 	out_unlock:
 		read_unlock_irq(&tasklist_lock);
-	//printk("Setting up task criticality level to %d.\n",target->rt_param.task_params.task_cl);
+	printk("Setting up task criticality level to %llu.\n",target->rt_param.task_params.task_cl);
 	out:
 		return retval;
 }
@@ -350,7 +350,7 @@ asmlinkage long sys_set_wcet_val(pid_t pid, unsigned long long* wcet_val, unsign
 	struct task_struct *target;
 	/*Declarations for linked list creation */
 	struct exec_times *temp;
-	//struct list_head_u *pos;
+	struct list_head_u *pos;
 	struct exec_times mylist_k;	
 
 	printk("Executing syscall-wcet_val in kernel..\n");
@@ -396,23 +396,25 @@ asmlinkage long sys_set_wcet_val(pid_t pid, unsigned long long* wcet_val, unsign
 
 	target->rt_param.task_params.mylist = &mylist_k;
 
+	kfree(wcet_ptr);
+	kfree(vd_ptr);
+
+	out_unlock:
+		read_unlock_irq(&tasklist_lock);
+
 
 	/*Remove this later..  Use for debugging purpose only.. */
 	//Include *pos declaration when needed
-	/*
+	
 	list_for_each_u(pos, &(target->rt_param.task_params.mylist->list))
 	{
 		temp= list_entry_u(pos, struct exec_times, list);
 		printk("WCET value = %llu\n", temp->wcet_val);	
 		printk("VD value = %llu\n", temp->vd);
 	}
-	*/
+	
 
-	kfree(wcet_ptr);
-	kfree(vd_ptr);
 
-	out_unlock:
-		read_unlock_irq(&tasklist_lock);
 	out:
 		return retval;
 }
