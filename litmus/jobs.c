@@ -26,7 +26,7 @@ void update_wcet_vd(struct task_struct *t)
 			t->rt_param.task_params.exec_cost = temp->wcet_val;	
 			t->rt_param.task_params.relative_deadline = temp->vd;	
 			TRACE_TASK(t, "assigning a WCET of %llu at level %d\n",
-					t->rt_param.task_params.exec.cost,sys_cl);
+					t->rt_param.task_params.exec_cost,sys_cl);
 			break;
 		}
 		diff_variable--;
