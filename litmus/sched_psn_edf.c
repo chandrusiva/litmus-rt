@@ -26,6 +26,10 @@
 /* to set up domain/cpu mappings */
 #include <litmus/litmus_proc.h>
 
+//To use global variables..
+#include <litmus/mc_global.h>
+
+
 typedef struct {
 	rt_domain_t 		domain;
 	int          		cpu;
