@@ -6,6 +6,8 @@
 #include <litmus/preempt.h>
 
 #include <litmus/budget.h>
+//Include headers
+#include <litmus/mc_global.h>
 
 struct enforcement_timer {
 	/* The enforcement timer is used to accurately police
@@ -26,6 +28,11 @@ static enum hrtimer_restart on_enforcement_timeout(struct hrtimer *timer)
 	local_irq_save(flags);
 	TRACE("enforcement timer fired.\n");
 	et->armed = 0;
+
+	TRACE("Changing sys_cl from %d.\n",sys_cl);
+	sys_cl = sys_cl -1;	
+	TRACE("sys_cl changed to %d.\n",sys_cl);
+
 	/* activate scheduler */
 	litmus_reschedule_local();
 	local_irq_restore(flags);
