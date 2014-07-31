@@ -236,8 +236,23 @@ static struct task_struct* psnedf_schedule(struct task_struct * prev)
 		 * the appropriate queue.
 		 */
 		if (pedf->scheduled && !blocks)
-			requeue(pedf->scheduled, edf);
-		next = __take_ready(edf);
+		{
+			if(pedf->scheduled->rt_param.task_params.task_cl <= sys_cl)
+				requeue(pedf->scheduled, edf);
+		}
+		//Choose task only if the criticality level is satisfied
+		do{
+			next = __take_ready(edf);
+			if(next==NULL)
+			{
+				//There are no legal tasks in the 
+				//ready queue.. So reset the sys cl
+				//value back to default.
+				sys_cl = temp_sys_cl;
+				break;
+			}
+		}while(next->rt_param.task_params.task_cl > sys_cl);
+
 	} else
 		/* Only override Linux scheduler if we have a real-time task
 		 * scheduled that needs to continue.
