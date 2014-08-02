@@ -16,9 +16,10 @@ void update_wcet_vd(struct task_struct *t)
 	int diff_variable;
 	struct exec_times *temp;
 	struct list_head_u *pos;
-
+	
 	diff_variable = temp_sys_cl - sys_cl;
-	list_for_each_u(pos, &(t->rt_param.task_params.mylist->list))
+	/*
+	list_for_each_u(pos, (t->rt_param.task_params.mylist->list))	
 	{
 		temp= list_entry_u(pos, struct exec_times, list);
 		if(diff_variable==0)
@@ -31,6 +32,7 @@ void update_wcet_vd(struct task_struct *t)
 		}
 		diff_variable--;
 	}
+	*/
 }
 
 static inline void setup_release(struct task_struct *t, lt_t release)

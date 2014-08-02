@@ -220,6 +220,10 @@ static struct task_struct* psnedf_schedule(struct task_struct * prev)
 	 * this.
 	 */
 	if (!np && (out_of_time || sleep) && !blocks) {
+		//Update the WCET and VD for the next job..
+		TRACE("Updation of values for next job.\n");
+		update_wcet_vd(pedf->scheduled);
+
 		job_completion(pedf->scheduled, !sleep);
 		resched = 1;
 	}
@@ -238,7 +242,12 @@ static struct task_struct* psnedf_schedule(struct task_struct * prev)
 		if (pedf->scheduled && !blocks)
 		{
 			if(pedf->scheduled->rt_param.task_params.task_cl <= sys_cl)
+			{
+				//Update the WCET and VD values before requeue..		
+				TRACE("Updation of values before requeue.\n");
+				update_wcet_vd(pedf->scheduled);
 				requeue(pedf->scheduled, edf);
+			}
 		}
 		//Choose task only if the criticality level is satisfied
 		do{

@@ -30,7 +30,7 @@ static enum hrtimer_restart on_enforcement_timeout(struct hrtimer *timer)
 	et->armed = 0;
 
 	TRACE("Changing sys_cl from %d.\n",sys_cl);
-	sys_cl = sys_cl -1;	
+	//sys_cl = sys_cl -1;	
 	TRACE("sys_cl changed to %d.\n",sys_cl);
 
 	/* activate scheduler */
