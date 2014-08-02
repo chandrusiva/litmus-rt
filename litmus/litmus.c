@@ -342,6 +342,11 @@ asmlinkage long sys_set_sys_cl(pid_t pid, int* cl, int* task_cli)
 		return retval;
 }
 
+
+//Declare global variables of stuct exec_times
+struct exec_times mylist_k[3];
+int task_num = 0;
+
 asmlinkage long sys_set_wcet_val(pid_t pid, unsigned long long* wcet_val, unsigned long long* vd ,int* num_values)
 {	
 	int retval=0,retval2=0,index,loop_index;	
@@ -350,8 +355,8 @@ asmlinkage long sys_set_wcet_val(pid_t pid, unsigned long long* wcet_val, unsign
 	struct task_struct *target;
 	/*Declarations for linked list creation */
 	struct exec_times *temp;
-	//struct list_head_u *pos;
-	struct exec_times mylist_k;	
+	struct list_head_u *pos;
+	
 
 	//printk("Executing syscall-wcet_val in kernel..\n");
 	read_lock_irq(&tasklist_lock);
@@ -385,34 +390,37 @@ asmlinkage long sys_set_wcet_val(pid_t pid, unsigned long long* wcet_val, unsign
 		goto out;
 	}
 
-	INIT_LIST_HEAD_U(&mylist_k.list);
+	INIT_LIST_HEAD_U(&mylist_k[task_num].list);
 	for(loop_index = 0; loop_index < index; loop_index++)
 	{
 		temp = (struct exec_times *) kmalloc (sizeof(struct exec_times),GFP_ATOMIC);
 		temp->wcet_val= *(wcet_ptr+loop_index);	
 		temp->vd=  *(vd_ptr+loop_index);
-		list_add_tail_u(&(temp->list),&(mylist_k.list));
+		list_add_tail_u(&(temp->list),&(mylist_k[task_num].list));
 	}
 
-	target->rt_param.task_params.mylist = &mylist_k;
+	target->rt_param.task_params.mylist = &mylist_k[task_num];
+	
 
 	kfree(wcet_ptr);
 	kfree(vd_ptr);
 
 	out_unlock:
 		read_unlock_irq(&tasklist_lock);
-
+	
+	task_num++;
+	printk("task_num = %d\n.",task_num);
 
 	/*Remove this later..  Use for debugging purpose only.. */
 	//Include *pos declaration when needed
-	/*
+	
 	list_for_each_u(pos, &(target->rt_param.task_params.mylist->list))
 	{
 		temp= list_entry_u(pos, struct exec_times, list);
 		printk("WCET value = %llu\n", temp->wcet_val);	
 		printk("VD value = %llu\n", temp->vd);
 	}
-	*/
+	
 
 
 	out:
