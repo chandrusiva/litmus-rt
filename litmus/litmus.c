@@ -355,7 +355,8 @@ asmlinkage long sys_set_wcet_val(pid_t pid, unsigned long long* wcet_val, unsign
 	struct task_struct *target;
 	/*Declarations for linked list creation */
 	struct exec_times *temp;
-	struct list_head_u *pos;
+	//For printk
+	//struct list_head_u *pos;
 	
 
 	//printk("Executing syscall-wcet_val in kernel..\n");
@@ -413,14 +414,14 @@ asmlinkage long sys_set_wcet_val(pid_t pid, unsigned long long* wcet_val, unsign
 
 	/*Remove this later..  Use for debugging purpose only.. */
 	//Include *pos declaration when needed
-	
+	/*
 	list_for_each_u(pos, &(target->rt_param.task_params.mylist->list))
 	{
 		temp= list_entry_u(pos, struct exec_times, list);
 		printk("WCET value = %llu\n", temp->wcet_val);	
 		printk("VD value = %llu\n", temp->vd);
 	}
-	
+	*/
 
 
 	out:
