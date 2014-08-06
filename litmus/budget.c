@@ -9,6 +9,9 @@
 //Include headers
 #include <litmus/mc_global.h>
 
+//Global variables
+int budget_flag=0;
+
 struct enforcement_timer {
 	/* The enforcement timer is used to accurately police
 	 * slice budgets. */
@@ -24,20 +27,32 @@ static enum hrtimer_restart on_enforcement_timeout(struct hrtimer *timer)
 						    struct enforcement_timer,
 						    timer);
 	unsigned long flags;
+	
+	TRACE("enforcement timer fired.\n");	
 
 	local_irq_save(flags);
-	TRACE("enforcement timer fired.\n");
 	et->armed = 0;
-
+	
+	budget_flag++;
+	if(budget_flag>2)
+	{
 	TRACE("Changing sys_cl from %d.\n",sys_cl);
 	sys_cl = sys_cl -1;	
 	TRACE("sys_cl changed to %d.\n",sys_cl);
-
+	}
 	/* activate scheduler */
 	litmus_reschedule_local();
 	local_irq_restore(flags);
+	
+	/*
+	if(budget_flag>3)
+	{
+		return HRTIMER_RESTART;
+	}
+	*/
 
 	return  HRTIMER_NORESTART;
+
 }
 
 /* assumes called with IRQs off */
